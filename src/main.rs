@@ -7,8 +7,6 @@ fn main() {
     term.set_title("Serial List");
 
     println!("Support hotplug?: {}", rusb::has_hotplug());
-    // context = Context::new();
-    // context.has_hotplug;
 
     let mut previous_num = 0;
     loop {
@@ -28,13 +26,12 @@ fn main() {
 }
 
 fn print_ports(ports: Vec<SerialPortInfo>, term: &Term) {
-    // term.move_cursor_to(0, 0);
-    term.clear_screen();
+    let _ = term.clear_screen();
     println!("-------");
     for port in ports {
-        println!("{}", port.port_name);
         match port.port_type {
             SerialPortType::UsbPort(usbinfo) => {
+                println!("{}", port.port_name);
                 println!("\tProduct: {}", usbinfo.product.clone().unwrap_or_default());
                 println!(
                     "\tManufacturer: {}",
