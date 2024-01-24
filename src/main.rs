@@ -1,6 +1,7 @@
 use console::Term;
 use rusb;
 use serialport::{available_ports, SerialPortInfo, SerialPortType};
+use std::{thread, time};
 fn main() {
     let term = Term::stdout();
     term.set_title("Serial List");
@@ -22,14 +23,16 @@ fn main() {
                 println!("{:?}", e);
             }
         }
+        thread::sleep(time::Duration::from_millis(100));
     }
 }
 
 fn print_ports(ports: Vec<SerialPortInfo>, term: &Term) {
     // term.move_cursor_to(0, 0);
     term.clear_screen();
+    println!("-------");
     for port in ports {
-        print!("{} - ", port.port_name);
+        println!("{}", port.port_name);
         match port.port_type {
             SerialPortType::UsbPort(usbinfo) => {
                 println!("\tProduct: {}", usbinfo.product.clone().unwrap_or_default());
@@ -45,5 +48,6 @@ fn print_ports(ports: Vec<SerialPortInfo>, term: &Term) {
             }
             _ => {}
         }
+        println!("-------");
     }
 }
