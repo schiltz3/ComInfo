@@ -1,4 +1,4 @@
-use serialport::{available_ports, SerialPortInfo, SerialPortType, UsbPortInfo};
+use serialport::{available_ports, SerialPortType};
 fn main() {
     match available_ports() {
         Ok(ports) => {
