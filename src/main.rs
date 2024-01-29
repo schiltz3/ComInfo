@@ -199,9 +199,7 @@ fn print_ports(ports: Vec<SerialPortInfo>, settings: &Settings) {
                             }
                         }
                     }
-                    None => {
-                        println!("\nFound No com ports in settings\n");
-                    }
+                    None => {}
                 }
                 if !skip_printing {
                     println!("-------");
