@@ -7,6 +7,7 @@
 ![CommInfo](https://github.com/schiltz3/ComInfo/assets/45466247/1abd68ea-c5ed-42fb-a45c-44efa765a0b2)
 
 ## Example settings.json
+Only `alias`, `product_id`, and `serial_number` are required fields.
 ```json
 {
   "com_ports": [
