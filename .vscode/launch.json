@@ -6,7 +6,7 @@
       "request": "launch",
       "preLaunchTask": "rust: cargo build",
       "program": "${workspaceFolder}/target/debug/comi.exe",
-      "args": ["-c"]
+      "args": ["-s", "${workspaceFolder}/settings.json"]
     }
   ]
 }
