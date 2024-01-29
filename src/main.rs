@@ -96,6 +96,8 @@ fn alias_com_port_eq(serial_port_info: &UsbPortInfo, com_port: &ComPort) -> bool
     if serial_port_info.pid == com_port.product_id {
         matched = matched && true;
         matched_element += 1;
+    } else {
+        matched = false;
     }
 
     match serial_port_info.serial_number.borrow() {
@@ -103,6 +105,8 @@ fn alias_com_port_eq(serial_port_info: &UsbPortInfo, com_port: &ComPort) -> bool
             if s == &com_port.serial_number {
                 matched = matched && true;
                 matched_element += 1;
+            } else {
+                matched = false;
             }
         }
         None => {}
@@ -114,6 +118,8 @@ fn alias_com_port_eq(serial_port_info: &UsbPortInfo, com_port: &ComPort) -> bool
                 if m == mn {
                     matched = matched && true;
                     matched_element += 1;
+                } else {
+                    matched = false;
                 }
             }
             None => {}
@@ -127,7 +133,9 @@ fn alias_com_port_eq(serial_port_info: &UsbPortInfo, com_port: &ComPort) -> bool
                 if pn == &remove_last_word(p) {
                     matched = matched && true;
                     matched_element += 1;
-                };
+                } else {
+                    matched = false;
+                }
             }
             None => {}
         },
@@ -195,7 +203,6 @@ fn print_ports(ports: Vec<SerialPortInfo>, settings: &Settings) {
                                 skip_printing = true;
                                 println!("-------");
                                 println!("{} {}", port.port_name, com_port_alias.alias);
-                                println!("-------");
                             }
                         }
                     }
@@ -214,7 +221,6 @@ fn print_ports(ports: Vec<SerialPortInfo>, settings: &Settings) {
                         "\tSerial Number: {}",
                         usbinfo.serial_number.clone().unwrap_or_default()
                     );
-                    println!("-------");
                 }
             }
             _ => {}
@@ -222,5 +228,7 @@ fn print_ports(ports: Vec<SerialPortInfo>, settings: &Settings) {
     }
     if serial_port_count == 0 {
         println!("No COM ports found.")
+    } else {
+        println!("-------");
     }
 }
