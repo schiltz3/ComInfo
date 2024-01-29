@@ -1,0 +1,12 @@
+{
+  "configurations": [
+    {
+      "name": "Launch",
+      "type": "lldb",
+      "request": "launch",
+      "preLaunchTask": "rust: cargo build",
+      "program": "${workspaceFolder}/target/debug/comi.exe",
+      "args": ["-c"]
+    }
+  ]
+}
