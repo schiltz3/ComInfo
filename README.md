@@ -22,7 +22,10 @@ Only `alias`, `product_id`, and `serial_number` are required fields.
 }
 ```
 
-
+## How to Run
+* Download the .exe from [Releases](https://github.com/schiltz3/ComInfo/releases)
+* By default, ComInfo does not open in continuous mode, so running the exe will cause a terminal to flash on the screen briefly.
+* To run ComInfo, call it from the command line by using `cmd` or `powershell`, navigating to the install directory, and running `comi` or `comi -h` for more info.
 
 ### Notes:
 - Still in alpha, so UI is a little rough and features like renaming devices are not supported
