@@ -12,6 +12,7 @@ struct Args {
     #[arg(short, long)]
     continuous: bool,
 
+    /// Leave blank to search for settings in exe directory
     #[arg(short, long)]
     settings: Option<PathBuf>,
 }
