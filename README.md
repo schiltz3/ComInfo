@@ -28,5 +28,4 @@ Only `alias`, `product_id`, and `serial_number` are required fields.
 * To run ComInfo, call it from the command line by using `cmd` or `powershell`, navigating to the install directory, and running `comi` or `comi -h` for more info.
 
 ### Notes:
-- Still in alpha, so UI is a little rough and features like renaming devices are not supported
 - Adding the install path to your system `PATH` variable allows you to call `comi.exe` from anywhere
