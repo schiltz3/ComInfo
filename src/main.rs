@@ -3,7 +3,7 @@ use console::Term;
 use serde::Deserialize;
 // use rusb;
 use serialport::{available_ports, SerialPortInfo, SerialPortType, UsbPortInfo};
-use std::{borrow::Borrow, fs, path::PathBuf, thread, time};
+use std::{borrow::Borrow, fs, path::PathBuf, thread, time, env};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about=None)]
@@ -38,9 +38,36 @@ fn main() {
     let args = Args::parse();
     let mut settings: Option<Settings> = None;
 
-    match args.settings {
+    // Get path we think we should use for settings.json
+    let setting_file_path: Option<PathBuf> =  match args.settings {
         Some(settings_path) => {
             if settings_path.exists() {
+                // println!("Using provided settings.json");
+                Some(settings_path)
+            }
+            else{
+                None
+            }
+        }
+        None => {
+            // Try to find file in exe directory
+             let mut default_path =  env::current_exe().unwrap();
+             default_path.pop();
+             default_path.push("settings.json");
+             if default_path.exists(){
+                // println!("Using default location for settings.json");
+                Some(default_path)
+             }
+             else{
+                None
+             }
+        }
+    };
+
+    // Open path and extract settings
+    match setting_file_path{
+        Some(settings_path)=>{
+
                 let config_file = fs::read_to_string(&settings_path);
                 match config_file {
                     Ok(config_json) => {
@@ -64,8 +91,8 @@ fn main() {
                     }
                 }
             }
+        _=> {
         }
-        None => {}
     }
 
     let default_settings = settings.unwrap_or(Settings { com_ports: None });
