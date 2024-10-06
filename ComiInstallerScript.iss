@@ -6,6 +6,7 @@
 #define MyAppPublisher "schiltz3"
 #define MyAppURL "https://github.com/schiltz3/ComInfo"
 #define MyAppExeName "comi.exe"
+#define MyIcon "./icon/ComiIcon.ico"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
@@ -28,21 +29,25 @@ ArchitecturesAllowed=x64compatible
 ; the 64-bit view of the registry.
 ArchitecturesInstallIn64BitMode=x64compatible
 DefaultGroupName={#MyAppName}
-DisableProgramGroupPage=yes
+DisableProgramGroupPage=no
 ; Uncomment the following line to run in non administrative install mode (install for current user only.)
 ;PrivilegesRequired=lowest
 OutputBaseFilename=ComiSetup
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
+UninstallDisplayName={#MyAppName}
+
+SetupIconFile={#MyIcon}
+UninstallDisplayIcon={#MyIcon}
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "C:\Users\John\GitRepos\ComInfo\target\release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\John\GitRepos\ComInfo\settings.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\John\GitRepos\ComInfo\README.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\target\release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\settings.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\README.md"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
