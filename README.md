@@ -1,7 +1,7 @@
 # ComInfo
 - Display Com Port info. 
-- Continuous mode: Updates display when USB serial devices are added or removed
-- Aliases: Devices can be given names through a .json settings file.
+- Continuous mode: Updates display when USB serial devices are added or removed.
+- Aliases: Devices can be given names through a .json settings file found in the install directory.
 
 ## Continuous update mode
 ![CommInfo](https://github.com/schiltz3/ComInfo/assets/45466247/1abd68ea-c5ed-42fb-a45c-44efa765a0b2)
