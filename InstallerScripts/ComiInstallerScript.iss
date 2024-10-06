@@ -6,7 +6,8 @@
 #define MyAppPublisher "schiltz3"
 #define MyAppURL "https://github.com/schiltz3/ComInfo"
 #define MyAppExeName "comi.exe"
-#define MyIcon "./icon/ComiIcon.ico"
+#define MyIcon "../icon/ComiIcon.ico"
+#define OutputDir "..\target\release"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
@@ -40,14 +41,15 @@ UninstallDisplayName={#MyAppName}
 
 SetupIconFile={#MyIcon}
 UninstallDisplayIcon={#MyIcon}
+OutputDir={#OutputDir}
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: ".\target\release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: ".\settings.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: ".\README.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#OutputDir}\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\settings.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
