@@ -29,3 +29,8 @@ Only `alias`, `product_id`, and `serial_number` are required fields.
 
 ### Notes:
 - Adding the install path to your system `PATH` variable allows you to call `comi.exe` from anywhere
+
+
+## Building
+https://jrsoftware.org/isdl.php to build the installer
+
