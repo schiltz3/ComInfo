@@ -23,12 +23,9 @@ Only `alias`, `product_id`, and `serial_number` are required fields.
 ```
 
 ## How to Run
-* Download the .exe from [Releases](https://github.com/schiltz3/ComInfo/releases)
+* Download ComiSetup.exe from [Releases](https://github.com/schiltz3/ComInfo/releases) and run the installer. Administrator is required as the installer adds Comi.exe to the system PATH
 * By default, ComInfo does not open in continuous mode, so running the exe will cause a terminal to flash on the screen briefly.
 * To run ComInfo, call it from the command line by using `cmd` or `powershell`, navigating to the install directory, and running `comi` or `comi -h` for more info.
-
-### Notes:
-- Adding the install path to your system `PATH` variable allows you to call `comi.exe` from anywhere
 
 
 ## Building
