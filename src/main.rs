@@ -3,7 +3,7 @@ use console::Term;
 use serde::Deserialize;
 // use rusb;
 use serialport::{available_ports, SerialPortInfo, SerialPortType, UsbPortInfo};
-use std::{borrow::Borrow, fs, path::PathBuf, thread, time, env};
+use std::{borrow::Borrow, env, fs, path::PathBuf, thread, time};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about=None)]
@@ -40,60 +40,56 @@ fn main() {
     let mut settings: Option<Settings> = None;
 
     // Get path we think we should use for settings.json
-    let setting_file_path: Option<PathBuf> =  match args.settings {
+    let setting_file_path: Option<PathBuf> = match args.settings {
         Some(settings_path) => {
             if settings_path.exists() {
                 // println!("Using provided settings.json");
                 Some(settings_path)
-            }
-            else{
+            } else {
                 None
             }
         }
         None => {
             // Try to find file in exe directory
-             let mut default_path =  env::current_exe().unwrap();
-             default_path.pop();
-             default_path.push("settings.json");
-             if default_path.exists(){
+            let mut default_path = env::current_exe().unwrap();
+            default_path.pop();
+            default_path.push("settings.json");
+            if default_path.exists() {
                 // println!("Using default location for settings.json");
                 Some(default_path)
-             }
-             else{
+            } else {
                 None
-             }
+            }
         }
     };
 
     // Open path and extract settings
-    match setting_file_path{
-        Some(settings_path)=>{
-
-                let config_file = fs::read_to_string(&settings_path);
-                match config_file {
-                    Ok(config_json) => {
-                        settings = serde_json::from_str(&config_json).unwrap_or(None);
-                        if settings.is_none() {
-                            println!(
-                                "Error parsing settings from: {}",
-                                settings_path
-                                    .to_str()
-                                    .expect("Unable to convert path too string")
-                            );
-                        }
-                    }
-                    _ => {
+    match setting_file_path {
+        Some(settings_path) => {
+            let config_file = fs::read_to_string(&settings_path);
+            match config_file {
+                Ok(config_json) => {
+                    settings = serde_json::from_str(&config_json).unwrap_or(None);
+                    if settings.is_none() {
                         println!(
-                            "Path does not exist: {}",
+                            "Error parsing settings from: {}",
                             settings_path
                                 .to_str()
                                 .expect("Unable to convert path too string")
                         );
                     }
                 }
+                _ => {
+                    println!(
+                        "Path does not exist: {}",
+                        settings_path
+                            .to_str()
+                            .expect("Unable to convert path too string")
+                    );
+                }
             }
-        _=> {
         }
+        _ => {}
     }
 
     let default_settings = settings.unwrap_or(Settings { com_ports: None });
@@ -118,6 +114,7 @@ fn remove_last_word(input: &str) -> String {
     // If there's no space, just return an empty string or the original string as per your requirement.
     input.to_string()
 }
+// Checks if a Com port alias entry equals a com port
 fn alias_com_port_eq(serial_port_info: &UsbPortInfo, com_port: &ComPort) -> bool {
     let mut matched_element = 0;
     let mut matched = true;
