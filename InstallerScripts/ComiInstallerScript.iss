@@ -66,7 +66,7 @@ ChangesEnvironment=true
 [Code]
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
-    if (CurStep = ssPostInstall) and IsTaskSelected('envPath')
+    if (CurStep = ssPostInstall) and WizardIsTaskSelected('envPath')
     then EnvAddPath(ExpandConstant('{app}'));
 end;
 
