@@ -1,12 +1,22 @@
 use clap::Parser;
 use console::Term;
+use directories::UserDirs;
 use serde::Deserialize;
 // use rusb;
 use serialport::{available_ports, SerialPortInfo, SerialPortType, UsbPortInfo};
-use std::{borrow::Borrow, env, fs, path::PathBuf, thread, time};
+use std::{borrow::Borrow, fs, path::PathBuf, thread, time};
 
 #[derive(Parser, Debug)]
-#[command(author, version, about, long_about=None)]
+#[command(
+    name = "Comi",
+    author = "https://github.com/schiltz3",
+    version,
+    about = "Display list of active COM ports",
+    after_help = "Settings file is installed to documents/Comi/settings.json by default"
+)]
+#[command(
+    help_template = "{about-section}\n{usage-heading} {usage}\n\n{all-args} {after-help}\n\nAuthor: {author}"
+)]
 struct Args {
     /// Continuously monitor COM Ports and update
     #[arg(short, long)]
@@ -30,7 +40,26 @@ struct ComPort {
 struct Settings {
     com_ports: Option<Vec<ComPort>>,
 }
-
+fn find_settings_path(args: &Args) -> Option<PathBuf> {
+    match args.settings.clone() {
+        Some(settings_path) => {
+            if settings_path.exists() {
+                println!("Using provided settings.json");
+                Some(settings_path)
+            } else {
+                None
+            }
+        }
+        None => {
+            // Look in default location
+            println!("Using default settings.json");
+            let mut path = UserDirs::new()?.document_dir()?.to_path_buf();
+            path.push("Comi/settings.json");
+            Some(path)
+        }
+    };
+    None
+}
 fn main() {
     let term = Term::stdout();
     term.set_title("Serial List");
@@ -40,29 +69,7 @@ fn main() {
     let mut settings: Option<Settings> = None;
 
     // Get path we think we should use for settings.json
-    let setting_file_path: Option<PathBuf> = match args.settings {
-        Some(settings_path) => {
-            if settings_path.exists() {
-                // println!("Using provided settings.json");
-                Some(settings_path)
-            } else {
-                None
-            }
-        }
-        None => {
-            // Try to find file in exe directory
-            let mut default_path = env::current_exe().unwrap();
-            default_path.pop();
-            default_path.push("settings.json");
-            if default_path.exists() {
-                // println!("Using default location for settings.json");
-                Some(default_path)
-            } else {
-                None
-            }
-        }
-    };
-
+    let setting_file_path: Option<PathBuf> = find_settings_path(&args);
     // Open path and extract settings
     match setting_file_path {
         Some(settings_path) => {

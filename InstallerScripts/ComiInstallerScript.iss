@@ -48,7 +48,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
 Source: "{#OutputDir}\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\settings.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\settings.json"; DestDir: "{userdocs}\{#MyAppName}"; Flags: ignoreversion
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
@@ -68,6 +68,10 @@ procedure CurStepChanged(CurStep: TSetupStep);
 begin
     if (CurStep = ssPostInstall) and WizardIsTaskSelected('envPath')
     then EnvAddPath(ExpandConstant('{app}'));
+    if CurStep = ssPostInstall then
+      begin
+        MsgBox('settings.json installed to: ' + ExpandConstant('{userdocs}\{#MyAppName}\settings.json'), mbInformation, MB_OK);
+      end;
 end;
 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
@@ -75,8 +79,6 @@ begin
     if CurUninstallStep = usPostUninstall
     then EnvRemovePath(ExpandConstant('{app}'));
 end;
-    
-    
     
 [Tasks]
 Name: envPath; Description: "Add to PATH variable" 
