@@ -41,10 +41,10 @@ struct Settings {
     com_ports: Option<Vec<ComPort>>,
 }
 fn find_settings_path(args: &Args) -> Option<PathBuf> {
-    match args.settings.clone() {
+    return match args.settings.clone() {
         Some(settings_path) => {
             if settings_path.exists() {
-                println!("Using provided settings.json");
+                println!("Using {}", settings_path.to_str().unwrap());
                 Some(settings_path)
             } else {
                 None
@@ -52,13 +52,16 @@ fn find_settings_path(args: &Args) -> Option<PathBuf> {
         }
         None => {
             // Look in default location
-            println!("Using default settings.json");
             let mut path = UserDirs::new()?.document_dir()?.to_path_buf();
             path.push("Comi/settings.json");
-            Some(path)
+            if path.exists() {
+                println!("Using {}", path.to_str().unwrap());
+                Some(path)
+            } else {
+                None
+            }
         }
     };
-    None
 }
 fn main() {
     let term = Term::stdout();

@@ -1,12 +1,53 @@
 {
   "configurations": [
     {
-      "name": "Launch",
       "type": "lldb",
       "request": "launch",
-      "preLaunchTask": "rust: cargo build",
+      "name": "Debug executable 'ComiRun'",
+      "cargo": {
+        "args": ["build", "--bin=ComiRun", "--package=comi"],
+        "filter": {
+          "name": "ComiRun",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug executable 'comi'",
+      "cargo": {
+        "args": ["build", "--bin=comi", "--package=comi"],
+        "filter": {
+          "name": "comi",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb-dap",
+      "request": "launch",
+      "name": "Launch lldb-dap",
+      "cwd": "${workspaceFolder}",
       "program": "${workspaceFolder}/target/debug/comi.exe",
-      "args": ["-s", "${workspaceFolder}/settings.json"]
+      "stopOnEntry": true,
+      "preRunCommands": ["cargo run -p comi"]
+    },
+    {
+      "type": "lldb-dap",
+      "request": "launch",
+      "name": "run comi",
+      "cwd": "${workspaceFolder}",
+      "program": "${workspaceFolder}\\target\\debug\\comi.exe",
+      "env": [
+        "RUST_BACKTRACE=short",
+        "RUSTC_TOOLCHAIN=C:\\Users\\John\\.rustup\\toolchains\\stable-x86_64-pc-windows-msvc"
+      ],
+      "args": []
     }
   ]
 }
