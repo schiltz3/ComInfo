@@ -2,7 +2,7 @@ use clap::Parser;
 use console::Term;
 // use rusb;
 use serialport::{available_ports, SerialPortInfo, SerialPortType, UsbPortInfo};
-use settings::read_settings_from_file;
+use settings::{install_settings_file, read_settings_from_file};
 use std::{borrow::Borrow, path::PathBuf, thread, time};
 mod settings;
 
@@ -33,6 +33,11 @@ fn main() {
     // println!("Support hotplug?: {}", rusb::has_hotplug());
 
     let args = Args::parse();
+
+    let install_result = install_settings_file();
+    if install_result.is_err() {
+        eprintln!("{}", install_result.unwrap_err());
+    }
 
     // Get path we think we should use for settings.json
     let settings_file_path: Option<PathBuf> = settings::find_settings_path(&args.settings);
