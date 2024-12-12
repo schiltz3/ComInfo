@@ -49,7 +49,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 [Files]
 Source: "{#OutputDir}\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#OUtputDir}\{#MyAppName}Run.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\settings.json"; DestDir: "{userdocs}\{#MyAppName}"; Flags: ignoreversion
+Source: "..\settings.json"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
