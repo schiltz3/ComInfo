@@ -34,6 +34,7 @@ fn main() {
 
     let args = Args::parse();
 
+    // Copy the settings file to user docs if it doesn't already exist
     let install_result = install_settings_file();
     if install_result.is_err() {
         eprintln!("{}", install_result.unwrap_err());

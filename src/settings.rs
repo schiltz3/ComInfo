@@ -1,6 +1,6 @@
 use directories::UserDirs;
 use serde::Deserialize;
-use std::{env, f32::consts::E, fmt::format, fs, path::PathBuf};
+use std::{env, fs, path::PathBuf};
 
 #[derive(Deserialize, Debug)]
 pub struct ComPort {
@@ -15,6 +15,8 @@ pub struct ComPort {
 pub struct Settings {
     pub com_ports: Option<Vec<ComPort>>,
 }
+
+// Search for settings file in where the user specified, or in the default location
 pub fn find_settings_path(args: &Option<PathBuf>) -> Option<PathBuf> {
     return match args.clone() {
         Some(settings_path) => {
@@ -38,6 +40,7 @@ pub fn find_settings_path(args: &Option<PathBuf>) -> Option<PathBuf> {
     };
 }
 
+// Get the json from a settings file as a string
 pub fn read_settings_from_file(settings_file_path: &Option<PathBuf>) -> Option<Settings> {
     return match settings_file_path {
         Some(settings_path) => {
@@ -49,11 +52,13 @@ pub fn read_settings_from_file(settings_file_path: &Option<PathBuf>) -> Option<S
     };
 }
 
+// Check if settings file exists and create it if it does not
 pub fn install_settings_file() -> Result<u64, String> {
     match get_default_settings_path() {
         Some(default_settings) => match get_settings_path() {
             Some(instal_path) => {
                 if !instal_path.exists() {
+                    // Create the Comi directory
                     fs::create_dir_all(
                         &instal_path
                             .parent()
@@ -65,10 +70,13 @@ pub fn install_settings_file() -> Result<u64, String> {
                         return Err(fmt_err);
                     })?;
 
+                    // Create the new file
                     fs::File::create_new(&instal_path).or_else(|e| {
                         let fmt_err = format!("Error creating File {}", e.to_string());
                         return Err(fmt_err);
                     })?;
+
+                    // Copy the file contents
                     return std::fs::copy(&default_settings, &instal_path).or_else(|err| {
                         let fmt_err = format!(
                             "Failed to copy {} to {} with error {}",
@@ -83,6 +91,8 @@ pub fn install_settings_file() -> Result<u64, String> {
                         return Err(fmt_err);
                     });
                 } else {
+                    // Return an ok because the file already exists
+                    //TODO Could check scheme here and update if needed
                     return Ok(0);
                 }
             }
@@ -97,12 +107,15 @@ pub fn install_settings_file() -> Result<u64, String> {
         }
     };
 }
+
+// Get the template settings file
 fn get_default_settings_path() -> Option<PathBuf> {
     let mut dir = env::current_dir().ok()?;
     dir.push("settings.json");
     return Some(dir);
 }
 
+// Get the settings file path in user documents
 fn get_settings_path() -> Option<PathBuf> {
     let mut path = UserDirs::new()?.document_dir()?.to_path_buf();
     path.push("Comi\\settings.json");
