@@ -33,4 +33,7 @@ Only `alias`, `product_id`, and `serial_number` are required fields.
 
 ## Building
 https://jrsoftware.org/isdl.php to build the installer
+```powershell
+winget install "inno setup"
+```
 
