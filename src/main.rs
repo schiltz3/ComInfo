@@ -25,6 +25,10 @@ pub struct Args {
     /// Leave blank to search for settings in exe directory
     #[arg(short, long)]
     settings: Option<PathBuf>,
+
+    /// Print verbose output. ex: The full settings file path
+    #[arg(short, long)]
+    verbose: bool,
 }
 
 fn main() {
@@ -41,7 +45,7 @@ fn main() {
     }
 
     // Get path we think we should use for settings.json
-    let settings_file_path: Option<PathBuf> = settings::find_settings_path(&args.settings);
+    let settings_file_path: Option<PathBuf> = settings::find_settings_path(&args.settings, args.verbose);
 
     // Open path and extract settings
     let default_settings = read_settings_from_file(&settings_file_path)

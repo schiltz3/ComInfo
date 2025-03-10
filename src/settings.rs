@@ -18,10 +18,10 @@ pub struct Settings {
 }
 
 // Search for settings file in where the user specified, or in the default location
-pub fn find_settings_path(args: &Option<PathBuf>) -> Option<PathBuf> {
+pub fn find_settings_path(args: &Option<PathBuf>, verbose: bool) -> Option<PathBuf> {
     return match args.clone() {
         Some(settings_path) => {
-            if settings_path.exists() {
+            if settings_path.exists() && verbose {
                 println!("Using \"{}\"", settings_path.to_slash().unwrap());
                 Some(settings_path)
             } else {
@@ -31,7 +31,7 @@ pub fn find_settings_path(args: &Option<PathBuf>) -> Option<PathBuf> {
         None => {
             // Look in default location
             let path = get_settings_path()?;
-            if path.exists() {
+            if path.exists() && verbose {
                 println!("Using \"{}\"", path.to_slash().unwrap());
                 Some(path)
             } else {
