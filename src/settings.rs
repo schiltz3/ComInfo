@@ -1,4 +1,5 @@
 use directories::UserDirs;
+use path_slash::PathBufExt;
 use serde::Deserialize;
 use std::{env, fs, path::PathBuf};
 
@@ -21,7 +22,7 @@ pub fn find_settings_path(args: &Option<PathBuf>) -> Option<PathBuf> {
     return match args.clone() {
         Some(settings_path) => {
             if settings_path.exists() {
-                println!("Using {}", settings_path.to_str().unwrap());
+                println!("Using \"{}\"", settings_path.to_slash().unwrap());
                 Some(settings_path)
             } else {
                 None
@@ -31,7 +32,7 @@ pub fn find_settings_path(args: &Option<PathBuf>) -> Option<PathBuf> {
             // Look in default location
             let path = get_settings_path()?;
             if path.exists() {
-                println!("Using {}", path.to_str().unwrap());
+                println!("Using \"{}\"", path.to_slash().unwrap());
                 Some(path)
             } else {
                 None
