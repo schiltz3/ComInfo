@@ -21,8 +21,10 @@ pub struct Settings {
 pub fn find_settings_path(args: &Option<PathBuf>, verbose: bool) -> Option<PathBuf> {
     return match args.clone() {
         Some(settings_path) => {
-            if settings_path.exists() && verbose {
-                println!("Using \"{}\"", settings_path.to_slash().unwrap());
+            if settings_path.exists() {
+                if verbose {
+                    println!("Using \"{}\"", settings_path.to_slash().unwrap());
+                }
                 Some(settings_path)
             } else {
                 None
@@ -31,8 +33,10 @@ pub fn find_settings_path(args: &Option<PathBuf>, verbose: bool) -> Option<PathB
         None => {
             // Look in default location
             let path = get_settings_path()?;
-            if path.exists() && verbose {
-                println!("Using \"{}\"", path.to_slash().unwrap());
+            if path.exists() {
+                if verbose {
+                    println!("Using \"{}\"", path.to_slash().unwrap());
+                }
                 Some(path)
             } else {
                 None
