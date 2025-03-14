@@ -8,7 +8,8 @@
 ![CommInfo](https://github.com/schiltz3/ComInfo/assets/45466247/1abd68ea-c5ed-42fb-a45c-44efa765a0b2)
 
 ## Example settings.json
-Only `alias`, `product_id`, and `serial_number` are required fields.
+* Only `alias`, `product_id`, and `serial_number` are required fields.
+* An empty `alias` fields prevent the port from being displayed
 ```json
 {
   "com_ports": [
@@ -18,6 +19,11 @@ Only `alias`, `product_id`, and `serial_number` are required fields.
       "serial_number": "0001",
       "manufacturer": "Silicon Labs",
       "product_name": "Silicon Labs CP210x USB to UART Bridge"
+    },
+    {
+      "alias": "",
+      "product_id": 61254,
+      "serial_number": "0002"
     }
   ]
 }
