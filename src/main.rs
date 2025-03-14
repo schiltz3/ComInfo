@@ -45,7 +45,8 @@ fn main() {
     }
 
     // Get path we think we should use for settings.json
-    let settings_file_path: Option<PathBuf> = settings::find_settings_path(&args.settings, args.verbose);
+    let settings_file_path: Option<PathBuf> =
+        settings::find_settings_path(&args.settings, args.verbose);
 
     // Open path and extract settings
     let default_settings = read_settings_from_file(&settings_file_path)
@@ -183,8 +184,13 @@ fn print_ports(ports: Vec<SerialPortInfo>, settings: &settings::Settings) {
                         for com_port_alias in com_port_aliases {
                             if alias_com_port_eq(&usbinfo, com_port_alias) {
                                 skip_printing = true;
-                                println!("-------");
-                                println!("{} {}", port.port_name, com_port_alias.alias);
+                                if com_port_alias.alias.is_empty() {
+                                    // Decrement the count if we want to hide this port
+                                    serial_port_count -= 1;
+                                } else {
+                                    println!("-------");
+                                    println!("{} {}", port.port_name, com_port_alias.alias);
+                                }
                             }
                         }
                     }
