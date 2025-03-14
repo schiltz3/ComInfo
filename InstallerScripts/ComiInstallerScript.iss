@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Comi"
-#define MyAppVersion "0.1.2"
+;#define MyAppVersion "0.1.2"
 #define MyAppPublisher "schiltz3"
 #define MyAppURL "https://github.com/schiltz3/ComInfo"
 #define MyAppExeName "comi.exe"
@@ -15,7 +15,7 @@
 AppId={{E57206E7-CAA1-4520-9880-52B7E98C0C8C}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
-;AppVerName={#MyAppName} {#MyAppVersion}
+;AppVerName={#MyAppName}-v{#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
@@ -33,7 +33,7 @@ DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=no
 ; Uncomment the following line to run in non administrative install mode (install for current user only.)
 ;PrivilegesRequired=lowest
-OutputBaseFilename=ComiSetup
+OutputBaseFilename=ComiSetup-v{#MyAppVersion}
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
