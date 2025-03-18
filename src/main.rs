@@ -2,7 +2,7 @@ use clap::Parser;
 use console::Term;
 // use rusb;
 use serialport::{available_ports, SerialPortInfo, SerialPortType, UsbPortInfo};
-use settings::{install_settings_file, read_settings_from_file};
+use settings::{install_settings_file, read_settings_from_file, validate_settings};
 use std::{borrow::Borrow, path::PathBuf, thread, time};
 mod settings;
 
@@ -52,89 +52,18 @@ fn main() {
     let default_settings = read_settings_from_file(&settings_file_path)
         .unwrap_or(settings::Settings { com_ports: None });
 
-    if args.continuous {
-        continuous_update(&term, default_settings);
+    let valid_settings = validate_settings(&default_settings);
+
+    if valid_settings.is_err() {
+        eprintln!("{}", valid_settings.unwrap_err());
     } else {
-        single_update(default_settings);
-    }
-}
-
-// enum ComAlias {
-//     String,
-//     SerialPortInfo,
-// }
-
-fn remove_last_word(input: &str) -> String {
-    if let Some(last_space_idx) = input.rfind(' ') {
-        let new_string = input[..last_space_idx].to_string();
-        return new_string;
-    }
-    // If there's no space, just return an empty string or the original string as per your requirement.
-    input.to_string()
-}
-// Checks if a Com port alias entry equals a com port
-fn alias_com_port_eq(serial_port_info: &UsbPortInfo, com_port: &settings::ComPort) -> bool {
-    let mut matched_element = 0;
-    let mut matched = true;
-    if serial_port_info.pid == com_port.product_id {
-        matched = matched && true;
-        matched_element += 1;
-    } else {
-        matched = false;
-    }
-
-    match serial_port_info.serial_number.borrow() {
-        Some(s) => {
-            if s == &com_port.serial_number {
-                matched = matched && true;
-                matched_element += 1;
-            } else {
-                matched = false;
-            }
+        if args.continuous {
+            continuous_update(&term, default_settings);
+        } else {
+            single_update(default_settings);
         }
-        None => {}
     }
-
-    match serial_port_info.manufacturer.borrow() {
-        Some(m) => match com_port.manufacturer.borrow() {
-            Some(mn) => {
-                if m == mn {
-                    matched = matched && true;
-                    matched_element += 1;
-                } else {
-                    matched = false;
-                }
-            }
-            None => {}
-        },
-        None => {}
-    }
-
-    match serial_port_info.product.borrow() {
-        Some(p) => match com_port.product_name.borrow() {
-            Some(pn) => {
-                if pn == &remove_last_word(p) {
-                    matched = matched && true;
-                    matched_element += 1;
-                } else {
-                    matched = false;
-                }
-            }
-            None => {}
-        },
-        None => {}
-    }
-    return matched && (matched_element > 0);
 }
-
-// fn filter(ports: &Vec<SerialPortInfo>, aliases: &Vec<ComPort>) -> Vec<ComAlias> {
-//     ports.into_iter().map(|com_info | -> {
-//         for alias in  aliases{
-
-//         }
-
-//     })
-// }
 
 fn continuous_update(term: &Term, settings: settings::Settings) {
     let mut previous_num = usize::MAX;
@@ -176,18 +105,20 @@ fn print_ports(ports: Vec<SerialPortInfo>, settings: &settings::Settings) {
     for port in ports {
         match port.port_type {
             SerialPortType::UsbPort(usbinfo) => {
+                let com_port_info: &settings::ComPort = &usbinfo.into();
                 let mut skip_printing = false;
                 serial_port_count += 1;
 
                 match settings.com_ports.borrow() {
                     Some(com_port_aliases) => {
                         for com_port_alias in com_port_aliases {
-                            if alias_com_port_eq(&usbinfo, com_port_alias) {
+                            if com_port_info == com_port_alias {
                                 skip_printing = true;
                                 if com_port_alias.alias.is_empty() {
                                     // Decrement the count if we want to hide this port
                                     serial_port_count -= 1;
                                 } else {
+                                    //TODO: Pull out to print alias function
                                     println!("-------");
                                     println!("{} {}", port.port_name, com_port_alias.alias);
                                 }
@@ -197,18 +128,19 @@ fn print_ports(ports: Vec<SerialPortInfo>, settings: &settings::Settings) {
                     None => {}
                 }
                 if !skip_printing {
+                    //TODO: Pull out to print port function
                     println!("-------");
                     println!("{}", port.port_name);
-                    println!("\tProduct: {}", usbinfo.product.clone().unwrap_or_default());
+                    println!(
+                        "\tProduct: {}",
+                        com_port_info.product_name.clone().unwrap_or_default()
+                    );
                     println!(
                         "\tManufacturer: {}",
-                        usbinfo.manufacturer.clone().unwrap_or_default()
+                        com_port_info.manufacturer.clone().unwrap_or_default()
                     );
-                    println!("\tPid: {}", usbinfo.pid);
-                    println!(
-                        "\tSerial Number: {}",
-                        usbinfo.serial_number.clone().unwrap_or_default()
-                    );
+                    println!("\tPid: {}", com_port_info.product_id);
+                    println!("\tSerial Number: {}", com_port_info.serial_number.clone());
                 }
             }
             _ => {}

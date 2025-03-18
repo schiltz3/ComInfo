@@ -1,6 +1,7 @@
 use directories::UserDirs;
 use path_slash::PathBufExt;
 use serde::Deserialize;
+use serialport::UsbPortInfo;
 use std::{env, fs, path::PathBuf};
 
 #[derive(Deserialize, Debug)]
@@ -12,9 +13,124 @@ pub struct ComPort {
     pub product_name: Option<String>,
 }
 
+fn remove_last_word(input: &str) -> String {
+    if let Some(last_space_idx) = input.rfind(' ') {
+        let new_string = input[..last_space_idx].to_string();
+        return new_string;
+    }
+    // If there's no space, just return an empty string or the original string as per your requirement.
+    input.to_string()
+}
+
+// TODO: Clean up implementation. IDK what I was on when I wrote it
+// TODO: Write exact match, and a fuzzy match
+impl PartialEq for ComPort {
+    fn eq(&self, other: &Self) -> bool {
+        let mut matched_element = 0;
+        let mut matched = true;
+        if other.product_id == self.product_id {
+            matched = matched && true;
+            matched_element += 1;
+        } else {
+            matched = false;
+        }
+
+        if other.serial_number == self.serial_number {
+            matched = matched && true;
+            matched_element += 1;
+        } else {
+            matched = false;
+        }
+
+        match other.manufacturer.clone() {
+            Some(m) => match self.manufacturer.clone() {
+                Some(mn) => {
+                    if m == mn {
+                        matched = matched && true;
+                        matched_element += 1;
+                    } else {
+                        matched = false;
+                    }
+                }
+                None => {
+                    matched = false;
+                }
+            },
+            None => {
+                if self.manufacturer.is_some() {
+                    matched = false;
+                }
+            }
+        }
+
+        match other.product_name.clone() {
+            Some(p) => match self.product_name.clone() {
+                Some(pn) => {
+                    if pn == remove_last_word(p.as_str()) {
+                        matched = matched && true;
+                        matched_element += 1;
+                    } else {
+                        matched = false;
+                    }
+                }
+                None => {
+                    matched = false;
+                }
+            },
+            None => {
+                if self.manufacturer.is_some() {
+                    matched = false;
+                }
+            }
+        }
+        return matched && (matched_element > 0);
+    }
+}
+
+// Convert from a UsbPortInfo to a ComPort
+impl From<UsbPortInfo> for ComPort {
+    fn from(port_info: UsbPortInfo) -> Self {
+        ComPort {
+            alias: "".to_string(),
+            product_id: port_info.pid,
+            serial_number: port_info.serial_number.unwrap_or("".to_string()),
+            manufacturer: port_info.manufacturer,
+            product_name: port_info.product,
+        }
+    }
+}
+
 #[derive(Deserialize, Debug)]
 pub struct Settings {
     pub com_ports: Option<Vec<ComPort>>,
+}
+
+pub fn validate_settings(settings: &Settings) -> Result<(), String> {
+    return match settings.com_ports {
+        Some(ref com_ports) => {
+            for (i, com_port) in com_ports.iter().enumerate() {
+                if com_port.serial_number.is_empty() {
+                    return Err(format!("Serial number cannot be empty\n{:?}", com_port));
+                }
+                for com_port_to_compare in com_ports.iter().skip(i + 1) {
+                    if com_port_to_compare.serial_number.is_empty() {
+                        return Err(format!(
+                            "Serial number cannot be empty\n{:?}",
+                            com_port_to_compare
+                        ));
+                    }
+                    if com_port_to_compare == com_port {
+                        return Err(format!(
+                            "Duplicate ComPort found for Serial Number \"{}\" and \"{}\"",
+                            com_port.serial_number, com_port_to_compare.serial_number
+                        ));
+                    }
+                }
+            }
+            Ok(())
+        }
+        None => Ok(()),
+    };
 }
 
 // Search for settings file in where the user specified, or in the default location
