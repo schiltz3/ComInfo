@@ -12,20 +12,33 @@ pub struct ComPort {
     pub manufacturer: Option<String>,
     pub product_name: Option<String>,
 }
+pub trait FzyEq {
+    fn fuzzy_eq(&self, other: &Self) -> bool;
+}
 
-fn remove_last_word(input: &str) -> String {
-    if let Some(last_space_idx) = input.rfind(' ') {
-        let new_string = input[..last_space_idx].to_string();
-        return new_string;
+impl PartialEq for ComPort {
+    fn eq(&self, other: &Self) -> bool {
+        let mut eq = true;
+        eq = eq && self.alias == other.alias;
+        eq = eq && self.product_id == other.product_id;
+        eq = eq && self.serial_number == other.serial_number;
+        eq = eq && self.manufacturer == other.manufacturer;
+        eq = eq && self.product_name == other.product_name;
+        if self.product_name.is_some() && other.product_name.is_some() {
+            eq = eq && self.product_name.as_ref().unwrap() == other.product_name.as_ref().unwrap();
+        }
+        eq = eq && self.manufacturer == other.manufacturer;
+        if self.manufacturer.is_some() && other.manufacturer.is_some() {
+            eq = eq && self.manufacturer.as_ref().unwrap() == other.manufacturer.as_ref().unwrap();
+        }
+        return eq;
     }
-    // If there's no space, just return an empty string or the original string as per your requirement.
-    input.to_string()
 }
 
 // TODO: Clean up implementation. IDK what I was on when I wrote it
 // TODO: Write exact match, and a fuzzy match
-impl PartialEq for ComPort {
-    fn eq(&self, other: &Self) -> bool {
+impl FzyEq for ComPort {
+    fn fuzzy_eq(&self, other: &Self) -> bool {
         let mut matched_element = 0;
         let mut matched = true;
         if other.product_id == self.product_id {
@@ -100,6 +113,15 @@ impl From<UsbPortInfo> for ComPort {
     }
 }
 
+fn remove_last_word(input: &str) -> String {
+    if let Some(last_space_idx) = input.rfind(' ') {
+        let new_string = input[..last_space_idx].to_string();
+        return new_string;
+    }
+    // If there's no space, just return an empty string or the original string as per your requirement.
+    input.to_string()
+}
+
 #[derive(Deserialize, Debug)]
 pub struct Settings {
     pub com_ports: Option<Vec<ComPort>>,
@@ -110,19 +132,19 @@ pub fn validate_settings(settings: &Settings) -> Result<(), String> {
         Some(ref com_ports) => {
             for (i, com_port) in com_ports.iter().enumerate() {
                 if com_port.serial_number.is_empty() {
-                    return Err(format!("Serial number cannot be empty\n{:?}", com_port));
+                    return Err(format!("Serial number cannot be empty\n{:#?}", com_port));
                 }
                 for com_port_to_compare in com_ports.iter().skip(i + 1) {
                     if com_port_to_compare.serial_number.is_empty() {
                         return Err(format!(
-                            "Serial number cannot be empty\n{:?}",
+                            "Serial number cannot be empty\n{:#?}",
                             com_port_to_compare
                         ));
                     }
                     if com_port_to_compare == com_port {
                         return Err(format!(
-                            "Duplicate ComPort found for Serial Number \"{}\" and \"{}\"",
-                            com_port.serial_number, com_port_to_compare.serial_number
+                            "Duplicate ComPort found \n\"{:#?}\" \n.\n.\n.\n\"{:#?}\"",
+                            com_port, com_port_to_compare
                         ));
                     }
                 }
