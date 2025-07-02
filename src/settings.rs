@@ -55,8 +55,8 @@ impl FzyEq for ComPort {
             matched = false;
         }
 
-        match other.manufacturer.clone() {
-            Some(m) => match self.manufacturer.clone() {
+        match other.manufacturer.as_ref() {
+            Some(m) => match self.manufacturer.as_ref() {
                 Some(mn) => {
                     if m == mn {
                         matched = matched && true;
@@ -76,10 +76,10 @@ impl FzyEq for ComPort {
             }
         }
 
-        match other.product_name.clone() {
-            Some(p) => match self.product_name.clone() {
+        match other.product_name.as_ref() {
+            Some(p) => match self.product_name.as_ref() {
                 Some(pn) => {
-                    if pn == remove_last_word(p.as_str()) {
+                    if pn == &remove_last_word(p.as_str()) {
                         matched = matched && true;
                         matched_element += 1;
                     } else {
