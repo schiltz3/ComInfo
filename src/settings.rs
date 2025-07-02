@@ -65,36 +65,24 @@ impl FzyEq for ComPort {
                         matched = false;
                     }
                 }
-                None => {
-                    matched = false;
-                }
+                None => {}
             },
-            None => {
-                if self.manufacturer.is_some() {
-                    matched = false;
-                }
-            }
+            None => {}
         }
 
         match other.product_name.as_ref() {
             Some(p) => match self.product_name.as_ref() {
                 Some(pn) => {
-                    if pn == &remove_last_word(p.as_str()) {
+                    if pn == p {
                         matched = matched && true;
                         matched_element += 1;
                     } else {
                         matched = false;
                     }
                 }
-                None => {
-                    matched = false;
-                }
+                None => {}
             },
-            None => {
-                if self.manufacturer.is_some() {
-                    matched = false;
-                }
-            }
+            None => {}
         }
         return matched && (matched_element > 0);
     }
@@ -108,7 +96,9 @@ impl From<UsbPortInfo> for ComPort {
             product_id: port_info.pid,
             serial_number: port_info.serial_number.unwrap_or("".to_string()),
             manufacturer: port_info.manufacturer,
-            product_name: port_info.product,
+            product_name: Some(remove_last_word(
+                port_info.product.unwrap_or("".to_string()).as_str(),
+            )),
         }
     }
 }
@@ -125,6 +115,7 @@ fn remove_last_word(input: &str) -> String {
 #[derive(Deserialize, Debug)]
 pub struct Settings {
     pub com_ports: Option<Vec<ComPort>>,
+    pub verbose: bool,
 }
 
 pub fn validate_settings(settings: &Settings) -> Result<(), String> {
