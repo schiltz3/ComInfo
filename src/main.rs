@@ -1,9 +1,9 @@
 use clap::Parser;
 use console::Term;
 // use rusb;
-use serialport::{available_ports, SerialPortInfo, SerialPortType, UsbPortInfo};
+use serialport::{available_ports, SerialPortInfo, SerialPortType};
 use settings::{install_settings_file, read_settings_from_file, validate_settings};
-use std::{borrow::Borrow, default, path::PathBuf, thread, time};
+use std::{borrow::Borrow, path::PathBuf, thread, time};
 
 use crate::settings::FzyEq;
 mod settings;
