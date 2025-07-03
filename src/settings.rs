@@ -2,7 +2,7 @@ use directories::UserDirs;
 use path_slash::PathBufExt;
 use serde::Deserialize;
 use serialport::UsbPortInfo;
-use std::{env, fs, path::PathBuf};
+use std::{env, fmt, fs, path::PathBuf};
 
 #[derive(Deserialize, Debug)]
 pub struct ComPort {
@@ -14,6 +14,20 @@ pub struct ComPort {
 }
 pub trait FzyEq {
     fn fuzzy_eq(&self, other: &Self) -> bool;
+}
+
+impl fmt::Display for ComPort {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if !self.alias.is_empty() {
+            write!(f, "{}", self.alias)?;
+        }
+        write!(f, "\tProduct: {}\n", self.product_name.clone().unwrap_or_default())?;
+        write!(f, "\tManufacturer: {}\n", self.manufacturer.clone().unwrap_or_default())?;
+        write!(f, "\tPid: {}\n", self.product_id)?;
+        write!(f, "\tSerial Number: {}\n", self.serial_number.clone())?;
+        // result
+        Ok(())
+    }
 }
 
 impl PartialEq for ComPort {
