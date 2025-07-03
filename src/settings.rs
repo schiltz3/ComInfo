@@ -129,7 +129,6 @@ fn remove_last_word(input: &str) -> String {
 #[derive(Deserialize, Debug)]
 pub struct Settings {
     pub com_ports: Option<Vec<ComPort>>,
-    pub verbose: bool,
 }
 
 pub fn validate_settings(settings: &Settings) -> Result<(), String> {

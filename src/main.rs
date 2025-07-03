@@ -37,6 +37,11 @@ pub struct Args {
     alias: Option<String>,
 }
 
+pub struct ApplicationSettings {
+    pub file_settings: settings::Settings,
+    pub verbose: bool,
+}
+
 fn main() {
     let term = Term::stdout();
     term.set_title("Serial List");
@@ -55,30 +60,31 @@ fn main() {
         settings::find_settings_path(&args.settings, args.verbose);
 
     // Open path and extract settings
-    let default_settings =
-        read_settings_from_file(&settings_file_path).unwrap_or(settings::Settings {
-            com_ports: None,
-            verbose: args.verbose,
-        });
+    let file_settings = read_settings_from_file(&settings_file_path)
+        .unwrap_or(settings::Settings { com_ports: None });
 
-    let valid_settings = validate_settings(&default_settings);
+    let valid_settings = validate_settings(&file_settings);
 
     if valid_settings.is_err() {
-        eprintln!("{}", valid_settings.unwrap_err());
+        eprintln!("{}", valid_settings.unwrap_err())
+    }
+
+    let application_settings = ApplicationSettings {
+        file_settings,
+        verbose: args.verbose,
+    };
+    if args.alias.is_some() {
+        let alias = args.alias.unwrap();
+        print_com(&alias.trim().to_string(), &application_settings);
+        return;
+    } else if args.continuous {
+        continuous_update(&term, application_settings);
     } else {
-        if args.alias.is_some() {
-            let alias = args.alias.unwrap();
-            print_com(&alias.trim().to_string(), &default_settings);
-            return;
-        } else if args.continuous {
-            continuous_update(&term, default_settings);
-        } else {
-            single_update(default_settings);
-        }
+        single_update(application_settings);
     }
 }
 
-fn continuous_update(term: &Term, settings: settings::Settings) {
+fn continuous_update(term: &Term, settings: ApplicationSettings) {
     let mut previous_num = usize::MAX;
     loop {
         match available_ports() {
@@ -98,7 +104,7 @@ fn continuous_update(term: &Term, settings: settings::Settings) {
     }
 }
 
-fn single_update(settings: settings::Settings) {
+fn single_update(settings: ApplicationSettings) {
     match available_ports() {
         Ok(ports) => {
             if ports.len() == 0 {
@@ -113,7 +119,7 @@ fn single_update(settings: settings::Settings) {
     }
 }
 
-fn print_ports(ports: Vec<SerialPortInfo>, settings: &settings::Settings) {
+fn print_ports(ports: Vec<SerialPortInfo>, settings: &ApplicationSettings) {
     let mut serial_port_count: u16 = 0;
     for port in ports {
         match port.port_type {
@@ -122,7 +128,7 @@ fn print_ports(ports: Vec<SerialPortInfo>, settings: &settings::Settings) {
                 let mut skip_printing = false;
                 serial_port_count += 1;
 
-                match settings.com_ports.borrow() {
+                match settings.file_settings.com_ports.borrow() {
                     Some(com_port_aliases) => {
                         for com_port_alias in com_port_aliases {
                             if settings.verbose {
@@ -158,12 +164,12 @@ fn print_ports(ports: Vec<SerialPortInfo>, settings: &settings::Settings) {
     }
 }
 
-fn print_com(alias: &String, settings: &settings::Settings) {
+fn print_com(alias: &String, settings: &ApplicationSettings) {
     match available_ports() {
         Ok(ports) => {
             if ports.len() == 0 {
                 println!("No serial ports found.");
-                return
+                return;
             }
             let mut serial_port_count: u16 = 0;
             for port in ports {
@@ -172,7 +178,7 @@ fn print_com(alias: &String, settings: &settings::Settings) {
                         let com_port_info: &settings::ComPort = &usbinfo.into();
                         serial_port_count += 1;
 
-                        match settings.com_ports.borrow() {
+                        match settings.file_settings.com_ports.borrow() {
                             Some(com_port_aliases) => {
                                 for com_port_alias in com_port_aliases {
                                     // Check if the alias matches the one we are looking for and return the COM number if it does
