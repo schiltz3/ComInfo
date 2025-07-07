@@ -1,9 +1,9 @@
 use clap::Parser;
 use console::Term;
 // use rusb;
-use serialport::{available_ports, SerialPortInfo, SerialPortType};
+use serialport::{available_ports, SerialPortType};
 use settings::{install_settings_file, read_settings_from_file, validate_settings};
-use std::{borrow::Borrow, path::PathBuf, thread, time};
+use std::{path::PathBuf, thread, time};
 
 use crate::settings::FzyEq;
 mod settings;
@@ -60,8 +60,10 @@ fn main() {
         settings::find_settings_path(&args.settings, args.verbose);
 
     // Open path and extract settings
-    let file_settings = read_settings_from_file(&settings_file_path)
-        .unwrap_or(settings::Settings { com_ports: None });
+    let file_settings =
+        read_settings_from_file(&settings_file_path).unwrap_or(settings::Settings {
+            com_ports: Vec::new(),
+        });
 
     let valid_settings = validate_settings(&file_settings);
 
@@ -87,76 +89,75 @@ fn main() {
 fn continuous_update(term: &Term, settings: ApplicationSettings) {
     let mut previous_num = usize::MAX;
     loop {
-        match available_ports() {
-            Ok(ports) => {
-                if ports.len() != previous_num {
-                    previous_num = ports.len().to_owned();
+        let ports = get_usb_ports();
+        if ports.len() != previous_num {
+            previous_num = ports.len().to_owned();
 
-                    let _ = term.clear_screen();
-                    print_ports(ports, &settings);
-                }
-            }
-            Err(e) => {
-                println!("{:?}", e);
-            }
+            let _ = term.clear_screen();
+            print_ports(&ports, &settings);
         }
         thread::sleep(time::Duration::from_millis(100));
     }
 }
 
 fn single_update(settings: ApplicationSettings) {
-    match available_ports() {
-        Ok(ports) => {
-            if ports.len() == 0 {
-                println!("No serial ports found.")
-            } else {
-                print_ports(ports, &settings);
-            }
-        }
-        Err(e) => {
-            println!("{:?}", e);
-        }
-    }
+    let ports = get_usb_ports();
+    print_ports(&ports, &settings);
 }
 
-fn print_ports(ports: Vec<SerialPortInfo>, settings: &ApplicationSettings) {
-    let mut serial_port_count: u16 = 0;
-    for port in ports {
-        match port.port_type {
-            SerialPortType::UsbPort(usbinfo) => {
-                let com_port_info: &settings::ComPort = &usbinfo.into();
-                let mut skip_printing = false;
-                serial_port_count += 1;
+type UsbPortVec = Vec<(String, settings::ComPort)>;
 
-                match settings.file_settings.com_ports.borrow() {
-                    Some(com_port_aliases) => {
-                        for com_port_alias in com_port_aliases {
-                            if settings.verbose {
-                                println!("Checking\n{:?}\n{:?}\n", com_port_info, com_port_alias);
-                            }
-                            if com_port_info.fuzzy_eq(com_port_alias) {
-                                skip_printing = true;
-                                if com_port_alias.alias.is_empty() {
-                                    // Decrement the count if we want to hide this port
-                                    serial_port_count -= 1;
-                                } else {
-                                    println!("-------");
-                                    println!("{} {}", port.port_name, com_port_alias.alias);
-                                }
-                            }
-                        }
-                    }
-                    None => {}
-                }
-                if !skip_printing {
-                    println!("-------");
-                    println!("{}", port.port_name);
-                    println!("{}", com_port_info);
-                }
+fn get_usb_ports() -> UsbPortVec {
+    available_ports()
+        .unwrap_or_default()
+        .iter()
+        .filter_map(|port| {
+            if let SerialPortType::UsbPort(usbinfo) = &port.port_type {
+                Some((
+                    port.port_name.to_owned(),
+                    settings::ComPort::from(usbinfo.to_owned()),
+                ))
+            } else {
+                None
             }
-            _ => {}
-        }
+        })
+        .collect()
+}
+
+fn print_ports(ports: &UsbPortVec, settings: &ApplicationSettings) {
+    if ports.len() == 0 {
+        println!("No usb COM ports found.");
+        return;
     }
+
+    let mut serial_port_count: u16 = 0;
+    ports.iter().for_each(|(port_name, com_port_info)| {
+        let mut found_match = false;
+        settings
+            .file_settings
+            .com_ports
+            .iter()
+            .for_each(|com_port_alias| {
+                if settings.verbose {
+                    println!("Checking\n{:?}\n{:?}\n", com_port_info, com_port_alias);
+                }
+                if com_port_info.fuzzy_eq(com_port_alias) {
+                    found_match = true;
+                    if !com_port_alias.alias.is_empty() {
+                        println!("-------");
+                        println!("{} {}", port_name, com_port_alias.alias);
+                        serial_port_count += 1;
+                    }
+                }
+            });
+
+        if !found_match {
+            println!("-------");
+            println!("{}", port_name);
+            println!("{}", com_port_info);
+        }
+    });
+
     if serial_port_count == 0 {
         println!("No COM ports found.")
     } else {
@@ -165,47 +166,23 @@ fn print_ports(ports: Vec<SerialPortInfo>, settings: &ApplicationSettings) {
 }
 
 fn print_com(alias: &String, settings: &ApplicationSettings) {
-    match available_ports() {
-        Ok(ports) => {
-            if ports.len() == 0 {
-                println!("No serial ports found.");
-                return;
-            }
-            let mut serial_port_count: u16 = 0;
-            for port in ports {
-                match port.port_type {
-                    SerialPortType::UsbPort(usbinfo) => {
-                        let com_port_info: &settings::ComPort = &usbinfo.into();
-                        serial_port_count += 1;
-
-                        match settings.file_settings.com_ports.borrow() {
-                            Some(com_port_aliases) => {
-                                for com_port_alias in com_port_aliases {
-                                    // Check if the alias matches the one we are looking for and return the COM number if it does
-                                    if com_port_info.fuzzy_eq(com_port_alias) {
-                                        if !com_port_alias.alias.is_empty()
-                                            && &com_port_alias.alias == alias
-                                        {
-                                            print!("{}", port.port_name);
-                                            return;
-                                        }
-                                    }
-                                }
-                            }
-                            None => {}
-                        }
-                    }
-                    _ => {}
+    let ports = get_usb_ports();
+    let mut serial_port_count: u16 = 0;
+    for (port_name, port) in ports {
+        serial_port_count += 1;
+        for com_port_alias in &settings.file_settings.com_ports {
+            // Check if the alias matches the one we are looking for and return the COM number if it does
+            if port.fuzzy_eq(com_port_alias) {
+                if !com_port_alias.alias.is_empty() && &com_port_alias.alias == alias {
+                    print!("{}", port_name);
+                    return;
                 }
             }
-            if serial_port_count == 0 {
-                println!("No COM ports found.")
-            } else {
-                println!("No COM port found with alias: {}", alias);
-            }
         }
-        Err(e) => {
-            println!("{:?}", e);
-        }
+    }
+    if serial_port_count == 0 {
+        println!("No COM ports found.")
+    } else {
+        println!("No COM port found with alias: {}", alias);
     }
 }
