@@ -21,8 +21,16 @@ impl fmt::Display for ComPort {
         if !self.alias.is_empty() {
             write!(f, "{}", self.alias)?;
         }
-        write!(f, "\tProduct: {}\n", self.product_name.clone().unwrap_or_default())?;
-        write!(f, "\tManufacturer: {}\n", self.manufacturer.clone().unwrap_or_default())?;
+        write!(
+            f,
+            "\tProduct: {}\n",
+            self.product_name.clone().unwrap_or_default()
+        )?;
+        write!(
+            f,
+            "\tManufacturer: {}\n",
+            self.manufacturer.clone().unwrap_or_default()
+        )?;
         write!(f, "\tPid: {}\n", self.product_id)?;
         write!(f, "\tSerial Number: {}\n", self.serial_number.clone())?;
         // result
@@ -128,35 +136,30 @@ fn remove_last_word(input: &str) -> String {
 
 #[derive(Deserialize, Debug)]
 pub struct Settings {
-    pub com_ports: Option<Vec<ComPort>>,
+    pub com_ports: Vec<ComPort>,
 }
 
 pub fn validate_settings(settings: &Settings) -> Result<(), String> {
-    return match settings.com_ports {
-        Some(ref com_ports) => {
-            for (i, com_port) in com_ports.iter().enumerate() {
-                if com_port.serial_number.is_empty() {
-                    return Err(format!("Serial number cannot be empty\n{:#?}", com_port));
-                }
-                for com_port_to_compare in com_ports.iter().skip(i + 1) {
-                    if com_port_to_compare.serial_number.is_empty() {
-                        return Err(format!(
-                            "Serial number cannot be empty\n{:#?}",
-                            com_port_to_compare
-                        ));
-                    }
-                    if com_port_to_compare == com_port {
-                        return Err(format!(
-                            "Duplicate ComPort found \n\"{:#?}\" \n.\n.\n.\n\"{:#?}\"",
-                            com_port, com_port_to_compare
-                        ));
-                    }
-                }
-            }
-            Ok(())
+    for (i, com_port) in settings.com_ports.iter().enumerate() {
+        if com_port.serial_number.is_empty() {
+            return Err(format!("Serial number cannot be empty\n{:#?}", com_port));
         }
-        None => Ok(()),
-    };
+        for com_port_to_compare in settings.com_ports.iter().skip(i + 1) {
+            if com_port_to_compare.serial_number.is_empty() {
+                return Err(format!(
+                    "Serial number cannot be empty\n{:#?}",
+                    com_port_to_compare
+                ));
+            }
+            if com_port_to_compare == com_port {
+                return Err(format!(
+                    "Duplicate ComPort found \n\"{:#?}\" \n.\n.\n.\n\"{:#?}\"",
+                    com_port, com_port_to_compare
+                ));
+            }
+        }
+    }
+    Ok(())
 }
 
 // Search for settings file in where the user specified, or in the default location
