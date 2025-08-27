@@ -35,6 +35,10 @@ pub struct Args {
     /// return a COM port if it exists given the alias
     #[arg(short, long)]
     alias: Option<String>,
+
+    /// Save all com ports to the settings file
+    #[arg(long)]
+    save: bool,
 }
 
 pub struct ApplicationSettings {
@@ -75,6 +79,27 @@ fn main() {
         file_settings,
         verbose: args.verbose,
     };
+
+    if args.save {
+        let result = settings::write_setting_to_file(
+            &settings_file_path,
+            get_usb_ports()
+                .iter()
+                .map(|(_, port)| port)
+                .cloned()
+                .collect(),
+        );
+        if result.is_ok_and(|count| count > 0) {
+            println!(
+                "Saved {} COM ports to {}",
+                result.unwrap(),
+                settings_file_path.unwrap().to_str().unwrap()
+            );
+            println!(
+                "!!! COM PORTS ARE HIDDEN !!!\nGive COM ports names by editing the settings file and filling in the alias field"
+            );
+        }
+    }
     if args.alias.is_some() {
         let alias = args.alias.unwrap();
         print_com(&alias.trim().to_string(), &application_settings);
@@ -155,6 +180,7 @@ fn print_ports(ports: &UsbPortVec, settings: &ApplicationSettings) {
             println!("-------");
             println!("{}", port_name);
             println!("{}", com_port_info);
+            serial_port_count += 1;
         }
     });
 

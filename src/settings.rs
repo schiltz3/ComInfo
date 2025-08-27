@@ -1,10 +1,11 @@
 use directories::UserDirs;
 use path_slash::PathBufExt;
 use serde::Deserialize;
+use serde::Serialize;
 use serialport::UsbPortInfo;
 use std::{env, fmt, fs, path::PathBuf};
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ComPort {
     pub alias: String,
     pub product_id: u16,
@@ -32,7 +33,7 @@ impl fmt::Display for ComPort {
             self.manufacturer.clone().unwrap_or_default()
         )?;
         write!(f, "\tPid: {}\n", self.product_id)?;
-        write!(f, "\tSerial Number: {}\n", self.serial_number.clone())?;
+        write!(f, "\tSerial Number: {}", self.serial_number.clone())?;
         // result
         Ok(())
     }
@@ -57,56 +58,15 @@ impl PartialEq for ComPort {
     }
 }
 
-// TODO: Clean up implementation. IDK what I was on when I wrote it
-// TODO: Write exact match, and a fuzzy match
+// Only match required fields
 impl FzyEq for ComPort {
     fn fuzzy_eq(&self, other: &Self) -> bool {
-        let mut matched_element = 0;
-        let mut matched = true;
-        if other.product_id == self.product_id {
-            matched = matched && true;
-            matched_element += 1;
-        } else {
-            matched = false;
-        }
-
-        if other.serial_number == self.serial_number {
-            matched = matched && true;
-            matched_element += 1;
-        } else {
-            matched = false;
-        }
-
-        match other.manufacturer.as_ref() {
-            Some(m) => match self.manufacturer.as_ref() {
-                Some(mn) => {
-                    if m == mn {
-                        matched = matched && true;
-                        matched_element += 1;
-                    } else {
-                        matched = false;
-                    }
-                }
-                None => {}
-            },
-            None => {}
-        }
-
-        match other.product_name.as_ref() {
-            Some(p) => match self.product_name.as_ref() {
-                Some(pn) => {
-                    if pn == p {
-                        matched = matched && true;
-                        matched_element += 1;
-                    } else {
-                        matched = false;
-                    }
-                }
-                None => {}
-            },
-            None => {}
-        }
-        return matched && (matched_element > 0);
+        let mut eq = true;
+        eq = eq && self.product_id == other.product_id;
+        eq = eq && self.serial_number == other.serial_number;
+        eq = eq && self.manufacturer == other.manufacturer;
+        eq = eq && self.product_name == other.product_name;
+        return eq;
     }
 }
 
@@ -130,11 +90,11 @@ fn remove_last_word(input: &str) -> String {
         let new_string = input[..last_space_idx].to_string();
         return new_string;
     }
-    // If there's no space, just return an empty string or the original string as per your requirement.
+    // If there's no space, just return an empty string or the original string.
     input.to_string()
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Settings {
     pub com_ports: Vec<ComPort>,
 }
@@ -154,6 +114,12 @@ pub fn validate_settings(settings: &Settings) -> Result<(), String> {
             if com_port_to_compare == com_port {
                 return Err(format!(
                     "Duplicate ComPort found \n\"{:#?}\" \n.\n.\n.\n\"{:#?}\"",
+                    com_port, com_port_to_compare
+                ));
+            }
+            if com_port_to_compare.fuzzy_eq(com_port) {
+                return Err(format!(
+                    "Similar potentially conflicting ComPort found \n\"{:#?}\" \n.\n.\n.\n\"{:#?}\"",
                     com_port, com_port_to_compare
                 ));
             }
@@ -200,6 +166,31 @@ pub fn read_settings_from_file(settings_file_path: &Option<PathBuf>) -> Option<S
 
         _ => None,
     };
+}
+
+pub fn write_setting_to_file(
+    settings_file_path: &Option<PathBuf>,
+    com_ports: Vec<ComPort>,
+) -> Result<i32, ()> {
+    if settings_file_path.is_none() {
+        print!("Cannot save settings file because no valid path was found");
+        return Err(());
+    }
+    let mut settings_written = 0;
+
+    // Open settings file, read it, add com ports if they don't already exist, and write it back
+    let mut settings =
+        read_settings_from_file(settings_file_path).unwrap_or(Settings { com_ports: vec![] });
+
+    for port in com_ports {
+        if !settings.com_ports.iter().any(|p| p.fuzzy_eq(&port)) {
+            settings.com_ports.push(port);
+            settings_written += 1;
+        }
+    }
+    let json = serde_json::to_string_pretty(&settings).unwrap();
+    fs::write(settings_file_path.as_ref().unwrap(), json).unwrap();
+    return Ok(settings_written);
 }
 
 // Check if settings file exists and create it if it does not
