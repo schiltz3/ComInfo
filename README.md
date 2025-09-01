@@ -38,8 +38,17 @@
 
 
 ## Building
-https://jrsoftware.org/isdl.php to build the installer
+## Debug
+```powershell
+cargo build
+```
+
+### Release
+https://jrsoftware.org/isdl.php is required to build the installer
 ```powershell
 winget install "inno setup"
+pip install -r requirements.txt
+python .\build.py release --installer
 ```
+
 

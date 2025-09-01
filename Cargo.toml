@@ -4,7 +4,6 @@
 name = "comi"
 version = "0.1.7"
 edition = "2021"
-build = "src/build.rs"
 
 default-run = "comi"
 
