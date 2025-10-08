@@ -13,9 +13,9 @@
 * Run `comi -h` to see all available options
 
 ## Giving Ports Aliases
-* Run `comi -s` to save all current com ports to the settings.json found inside the Comi folder in your documents folder
+* Run `comi --save` to save all current com ports to the settings.json found inside the Comi folder in your documents folder
    * Run `comi -v` to see where the settings.json file is saved
-2. Replace the "alias" field with what you want the com port to be named
+2. Replace the "alias" field with what you want the COM port to be named
 
 ## Using comi to substitute names for com ports
 Running `comi -a com_alias` will return the com port related to that alias.
