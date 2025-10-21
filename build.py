@@ -14,7 +14,7 @@ def read_crate_version():
     try:
         with open(CARGO_TOML_PATH, 'r') as f:
             cargo_toml = toml.load(f)
-        return cargo_toml['package']['version']
+        return cargo_toml['package']['version'].replace('.', '_')
     except Exception as e:
         print(f"Error reading Cargo.toml: {e}")
         sys.exit(1)

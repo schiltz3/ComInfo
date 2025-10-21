@@ -33,7 +33,7 @@ DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=no
 ; Uncomment the following line to run in non administrative install mode (install for current user only.)
 ;PrivilegesRequired=lowest
-OutputBaseFilename=ComiSetup-v{#MyAppVersion}
+OutputBaseFilename=Install_Comi_v{#MyAppVersion}_x86_64
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern

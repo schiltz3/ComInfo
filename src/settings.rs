@@ -251,7 +251,8 @@ pub fn install_settings_file() -> Result<u64, String> {
 
 // Get the template settings file
 fn get_default_settings_path() -> Option<PathBuf> {
-    let mut dir = env::current_dir().ok()?;
+    let mut dir = env::current_exe().ok()?;
+    dir = dir.parent()?.to_path_buf();
     dir.push("settings.json");
     return Some(dir);
 }
