@@ -1,11 +1,11 @@
 {
   "com_ports": [
     {
-      "alias": "WLED",
+      "alias": "Example Alias",
       "product_id": 60000,
       "serial_number": "0001",
-      "manufacturer": "Silicon Labs",
-      "product_name": "Silicon Labs CP210x USB to UART Bridge"
+      "manufacturer": "Example Manufacturer",
+      "product_name": "Example Product Name"
     }
   ]
 }
