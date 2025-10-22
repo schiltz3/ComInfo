@@ -1,4 +1,4 @@
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use console::Term;
 // use rusb;
 use serialport::{available_ports, SerialPortType};
@@ -36,9 +36,18 @@ pub struct Args {
     #[arg(short, long)]
     alias: Option<String>,
 
+    #[command(subcommand)]
+    save: Option<SaveCommands>,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum SaveCommands {
     /// Save all com ports to the settings file
-    #[arg(long)]
-    save: bool,
+    Save {
+        /// Hide saved COM ports (leave alias field empty)
+        #[arg(long)]
+        hidden: bool,
+    },
 }
 
 pub struct ApplicationSettings {
@@ -63,43 +72,57 @@ fn main() {
     let settings_file_path: Option<PathBuf> =
         settings::find_settings_path(&args.settings, args.verbose);
 
-    // Open path and extract settings
-    let file_settings =
-        read_settings_from_file(&settings_file_path).unwrap_or(settings::Settings {
-            com_ports: Vec::new(),
-        });
+    let mut application_settings = get_application_settings(&settings_file_path, args.verbose);
 
-    let valid_settings = validate_settings(&file_settings);
-
-    if valid_settings.is_err() {
-        eprintln!("{}", valid_settings.unwrap_err())
-    }
-
-    let application_settings = ApplicationSettings {
-        file_settings,
-        verbose: args.verbose,
-    };
-
-    if args.save {
-        let result = settings::write_setting_to_file(
-            &settings_file_path,
-            get_usb_ports()
-                .iter()
-                .map(|(_, port)| port)
-                .cloned()
-                .collect(),
-        );
-        if result.is_ok_and(|count| count > 0) {
-            println!(
-                "Saved {} COM ports to {}",
-                result.unwrap(),
-                settings_file_path.unwrap().to_str().unwrap()
+    match args.save {
+        Some(SaveCommands::Save { hidden }) => {
+            // Save current com ports to settings file
+            let result = settings::write_setting_to_file(
+                &settings_file_path,
+                get_usb_ports() // Read current com ports
+                    .into_iter()
+                    .map(|(_, mut port)| {
+                        // Set the alias to the product name by default
+                        if !hidden {
+                            port.alias = port.product_name.clone().unwrap_or_default();
+                        }
+                        port
+                    })
+                    .collect(),
             );
-            println!(
-                "!!! COM PORTS ARE HIDDEN !!!\nGive COM ports names by editing the settings file and filling in the alias field"
-            );
+            // Handle result of saving settings
+            match result {
+                Ok(count) => {
+                    if count == 0 {
+                        // No new ports were saved
+                        println!("No new COM ports were saved to the settings file.");
+                    } else if count > 0 {
+                        // Some ports were saved
+                        println!(
+                            "Saved {} COM port{} to \"{}\"",
+                            result.unwrap(),
+                            if result.unwrap() != 1 { "s" } else { "" },
+                            settings_file_path.as_ref().unwrap().to_str().unwrap()
+                        );
+
+                        // Warn about hidden ports
+                        if hidden {
+                            println!("!!! SAVED COM PORTS WERE HIDDEN !!! ... Give COM ports names by editing the settings file and filling in the alias field");
+                        }
+
+                        // Refresh application settings after saving new ports
+                        application_settings =
+                            get_application_settings(&settings_file_path, args.verbose);
+                    }
+                }
+                Err(_) => {
+                    println!("Failed to save COM ports to settings file.");
+                }
+            }
         }
+        None => {}
     }
+
     if args.alias.is_some() {
         let alias = args.alias.unwrap();
         print_com(&alias.trim().to_string(), &application_settings);
@@ -130,6 +153,26 @@ fn single_update(settings: ApplicationSettings) {
     print_ports(&ports, &settings);
 }
 
+/// Extract settings, validate, and return ApplicationSettings
+fn get_application_settings(
+    settings_file_path: &Option<PathBuf>,
+    verbose: bool,
+) -> ApplicationSettings {
+    let file_settings = read_settings_from_file(settings_file_path).unwrap_or(settings::Settings {
+        com_ports: Vec::new(),
+    });
+    let valid_settings = validate_settings(&file_settings);
+    if valid_settings.is_err() {
+        eprintln!("{}", valid_settings.unwrap_err())
+    }
+    ApplicationSettings {
+        file_settings,
+        verbose,
+    }
+}
+
+/// A vector of tuples containing the port name and corresponding ComPort info
+/// e.g., ("COM9", ComPort{...})
 type UsbPortVec = Vec<(String, settings::ComPort)>;
 
 fn get_usb_ports() -> UsbPortVec {
