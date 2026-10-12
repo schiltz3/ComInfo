@@ -189,6 +189,12 @@ fn print_ports(ports: &UsbPortVec, settings: &ApplicationSettings) {
     } else {
         println!("-------");
     }
+
+    let detected_ports: Vec<settings::ComPort> =
+        ports.iter().map(|(_, port)| port).cloned().collect();
+    if settings::needs_interface_split(&settings.file_settings, &detected_ports) {
+        println!("A device with several COM ports has an entry that covers all of them. Run `comi --save` to give each port its own entry.");
+    }
 }
 
 fn print_com(alias: &String, settings: &ApplicationSettings) {

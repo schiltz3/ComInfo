@@ -2,7 +2,7 @@
 
 [package]
 name = "comi"
-version = "0.1.8"
+version = "0.1.9"
 edition = "2021"
 
 default-run = "comi"
@@ -23,4 +23,4 @@ path-slash = "0.2.1"
 rusb = "0.9.3"
 serde = { version = "1.0.196", features = ["derive"] }
 serde_json = "1.0.112"
-serialport = "4.3.0"
+serialport = { version = "4.7.0", features = ["usbportinfo-interface"] }
