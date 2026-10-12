@@ -31,6 +31,7 @@ plink -serial -sercfg 115200,8,n,1,N $(comi -a "Tool UART 5")
 ## Example settings.json
 * Only `alias`, `product_id`, and `serial_number` are required fields.
 * An empty `alias` fields prevent the port from being displayed
+* `interface` is optional. Use it to name each COM port of a composite device that exposes several ports under the same `product_id` and `serial_number` (for example an STM32 with two CDC ports, `MI_00` and `MI_02` in Device Manager). `comi` shows the interface number of unnamed ports. `comi --save` records it only for devices that have several COM ports. An entry without `interface` matches every interface of the device. If an older entry covers a device with several COM ports, `comi` suggests running `comi --save`, which splits that entry into one entry per interface and keeps the alias on each so you can rename them. If every interface of that device already has its own entry, `comi --save` removes the older entry instead.
 ```json
 {
   "com_ports": [
@@ -45,6 +46,18 @@ plink -serial -sercfg 115200,8,n,1,N $(comi -a "Tool UART 5")
       "alias": "",
       "product_id": 61254,
       "serial_number": "0002"
+    },
+    {
+      "alias": "Comms Adapter Port A",
+      "product_id": 22336,
+      "serial_number": "0003",
+      "interface": 0
+    },
+    {
+      "alias": "Comms Adapter Port B",
+      "product_id": 22336,
+      "serial_number": "0003",
+      "interface": 2
     }
   ]
 }
